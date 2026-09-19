@@ -1,18 +1,16 @@
 import { useEffect, useMemo, useState } from 'react';
 
 const initialArtifacts = [
-  { id: 1, type: 'notes', title: 'Morning brief', content: 'Check priorities, review inbox, and prep launch notes.' },
-  { id: 2, type: 'web', title: 'Web result', content: 'OpenAI Realtime + desktop AI companion strategies were reviewed.' },
-  { id: 3, type: 'code', title: 'Snippet', content: 'const voiceSession = await openai.beta.realtime.sessions.create({ model: "gpt-realtime-2" });' },
-  { id: 4, type: 'table', title: 'Task progress', content: 'Research 80% • Draft UI 60% • Voice setup 90%' },
+  { id: 1, type: 'menu', title: 'Primary menu', content: 'Overview / Notes / Search / Automations / Security' },
+  { id: 2, type: 'web', title: 'Web result', content: 'OpenAI Realtime voice + agentic desktop workflows are functional for a focused companion UI.' },
+  { id: 3, type: 'graphics', title: 'Orb status', content: 'Signal clean / voice ready / background tool threads stable / no blockers.' },
+  { id: 4, type: 'notes', title: 'Quick note', content: 'Keep the UX simple: calm operator voice, clear status, fast tasks, minimal friction.' },
+  { id: 5, type: 'table', title: 'Database table', content: 'notes | tasks | progress | session_state' },
+  { id: 6, type: 'code', title: 'Code snippet', content: 'const session = await openai.beta.realtime.sessions.create({ model: "gpt-realtime-2" });' },
+  { id: 7, type: 'task', title: 'Task progress', content: 'Research 100% • Voice session 96% • Computer use 72% • Artifact panel 90%' },
 ];
 
-type Artifact = {
-  id: number;
-  type: string;
-  title: string;
-  content: string;
-};
+type Artifact = { id: number; type: string; title: string; content: string };
 
 export default function App() {
   const [mode, setMode] = useState<'display' | 'computer'>('display');
@@ -21,126 +19,76 @@ export default function App() {
   const [transcript, setTranscript] = useState('');
   const [artifacts, setArtifacts] = useState<Artifact[]>(initialArtifacts);
   const [expanded, setExpanded] = useState(false);
+  const [pendingRisk, setPendingRisk] = useState<string | null>(null);
 
   useEffect(() => {
-    const fetchConfig = async () => {
-      const config = await window.axes.getConfig();
-      if (config.mode === 'computer') {
-        setMode('computer');
-      }
-    };
-
-    fetchConfig().catch(() => {});
+    window.axes.getConfig().then((config) => {
+      if (config.mode === 'computer') setMode('computer');
+    }).catch(() => undefined);
   }, []);
 
-  const orbStyle = useMemo(
-    () => ({
-      transform: isSpeaking ? 'scale(1.08)' : 'scale(1)',
-      boxShadow: isSpeaking
-        ? '0 0 40px rgba(86, 185, 255, 0.9), 0 0 90px rgba(118, 102, 255, 0.65)'
-        : '0 0 26px rgba(86, 185, 255, 0.4)',
-    }),
-    [isSpeaking]
-  );
+  const orbStyle = useMemo(() => ({
+    transform: isSpeaking ? 'scale(1.08)' : 'scale(1)',
+    boxShadow: isSpeaking
+      ? '0 0 42px rgba(86, 185, 255, 0.9), 0 0 90px rgba(118, 102, 255, 0.65)'
+      : '0 0 26px rgba(86, 185, 255, 0.4)',
+  }), [isSpeaking]);
 
-  const handleAddNote = () => {
-    setArtifacts((current) => [
-      {
-        id: Date.now(),
-        type: 'notes',
-        title: 'New note',
-        content: 'Axes logged a follow-up for the next work cycle.',
-      },
-      ...current,
-    ]);
+  const handleRiskAction = (actionLabel: string) => setPendingRisk(actionLabel);
+
+  const confirmRisk = () => {
+    if (!pendingRisk) return;
+    setArtifacts((current) => [{
+      id: Date.now(),
+      type: 'task',
+      title: 'Permission granted',
+      content: `${pendingRisk} was paused for approval and then confirmed.`,
+    }, ...current]);
+    setPendingRisk(null);
   };
 
-  const handleTaskUpdate = () => {
-    setArtifacts((current) => current.map((artifact) =>
-      artifact.type === 'table'
-        ? {
-            ...artifact,
-            content: 'Research 100% • Draft UI 75% • Voice setup 95% • Ready for live test',
-          }
-        : artifact
-    ));
-  };
+  const handleAddNote = () => setArtifacts((current) => [{
+    id: Date.now(),
+    type: 'notes',
+    title: 'New note',
+    content: 'Axes logged a follow-up for the next work cycle.',
+  }, ...current]);
+
+  const handleTaskUpdate = () => setArtifacts((current) => current.map((artifact) =>
+    artifact.type === 'task'
+      ? { ...artifact, content: 'Research 100% • Voice session 98% • Computer use 78% • Artifact panel 92%' }
+      : artifact
+  ));
 
   return (
     <div className={`app-shell ${expanded ? 'expanded' : ''}`}>
       <aside className="companion-panel">
         <div className="topbar">
-          <div>
-            <div className="eyebrow">AI COMPANION</div>
-            <h1>Axes</h1>
-          </div>
+          <div><div className="eyebrow">AI COMPANION</div><h1>Axes</h1></div>
           <div className="mode-toggle">
-            <button
-              className={mode === 'display' ? 'active' : ''}
-              onClick={() => setMode('display')}
-            >
-              Display
-            </button>
-            <button
-              className={mode === 'computer' ? 'active' : ''}
-              onClick={() => setMode('computer')}
-            >
-              Computer use
-            </button>
+            <button className={mode === 'display' ? 'active' : ''} onClick={() => setMode('display')}>Display</button>
+            <button className={mode === 'computer' ? 'active' : ''} onClick={() => setMode('computer')}>Computer use</button>
           </div>
         </div>
-
-        <div className="orb-wrap">
-          <div className="orb-ring" />
-          <div className="orb-core" style={orbStyle}>
-            <div className="orb-glow" />
-          </div>
-        </div>
-
+        <div className="orb-wrap"><div className="orb-ring" /><div className="orb-core" style={orbStyle}><div className="orb-glow" /></div></div>
         <div className="voice-controls">
-          <button className="primary" onClick={() => setListening((value) => !value)}>
-            {listening ? 'Mute mic' : 'Listen'}
-          </button>
+          <button className="primary" onClick={() => setListening((value) => !value)}>{listening ? 'Mute mic' : 'Listen'}</button>
           <button onClick={() => setIsSpeaking((value) => !value)}>Toggle voice</button>
+          <button onClick={() => handleRiskAction('Send a message to someone')}>Risk action</button>
         </div>
-
-        <div className="status-box">
-          <span>Mode</span>
-          <strong>{mode === 'display' ? 'Display mode' : 'Computer use'}</strong>
-          <small>{listening ? 'Listening for input' : 'Standby'}</small>
-        </div>
-
-        <textarea
-          value={transcript || 'Ask Axes for a summary, a search, or a workflow update.'}
-          onChange={(event) => setTranscript(event.target.value)}
-          rows={6}
-        />
-
+        <div className="status-box"><span>Mode</span><strong>{mode === 'display' ? 'Display mode' : 'Computer use'}</strong><small>{listening ? 'Listening for input' : 'Standby'}</small></div>
+        <textarea value={transcript || 'Ask Axes for a summary, a search, or a workflow update.'} onChange={(event) => setTranscript(event.target.value)} rows={6} />
         <div className="quick-actions">
           <button onClick={handleAddNote}>New note</button>
           <button onClick={handleTaskUpdate}>Update task</button>
-          <button onClick={() => setExpanded((value) => !value)}>
-            {expanded ? 'Collapse panel' : 'Expand panel'}
-          </button>
+          <button onClick={() => setExpanded((value) => !value)}>{expanded ? 'Collapse panel' : 'Expand panel'}</button>
         </div>
       </aside>
-
       <main className="artifact-panel">
-        <div className="panel-header">
-          <h2>Artifacts</h2>
-          <span>{artifacts.length} active</span>
-        </div>
-
-        <div className="artifact-grid">
-          {artifacts.map((artifact) => (
-            <article key={artifact.id} className={`artifact ${artifact.type}`}>
-              <div className="artifact-tag">{artifact.type}</div>
-              <h3>{artifact.title}</h3>
-              <p>{artifact.content}</p>
-            </article>
-          ))}
-        </div>
+        <div className="panel-header"><h2>Artifacts</h2><span>{artifacts.length} active</span></div>
+        <div className="artifact-grid">{artifacts.map((artifact) => <article key={artifact.id} className={`artifact ${artifact.type}`}><div className="artifact-tag">{artifact.type}</div><h3>{artifact.title}</h3><p>{artifact.content}</p></article>)}</div>
       </main>
+      {pendingRisk && <div className="risk-modal"><div className="risk-card"><h3>Confirmation needed</h3><p>This action is risky: {pendingRisk}. Axes should pause and ask before proceeding.</p><div className="risk-actions"><button className="primary" onClick={confirmRisk}>Confirm</button><button onClick={() => setPendingRisk(null)}>Cancel</button></div></div></div>}
     </div>
   );
 }

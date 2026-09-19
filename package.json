@@ -3,15 +3,15 @@
   "private": true,
   "version": "0.1.0",
   "type": "module",
-  "main": "electron/main/index.ts",
+  "main": "electron/main/index.cjs",
   "scripts": {
     "dev": "concurrently -k \"npm:dev:server\" \"npm:dev:renderer\" \"wait-on tcp:3001 tcp:5173 && npm run electron\"",
     "dev:server": "tsx watch server/index.ts",
     "dev:renderer": "vite --host 0.0.0.0",
-    "electron": "tsx electron/main/index.ts",
+    "electron": "electron electron/main/index.cjs",
     "build": "vite build",
     "preview": "vite preview --host 0.0.0.0",
-    "start": "NODE_ENV=production tsx electron/main/index.ts"
+    "start": "NODE_ENV=production electron electron/main/index.cjs"
   },
   "dependencies": {
     "better-sqlite3": "^11.1.0",
