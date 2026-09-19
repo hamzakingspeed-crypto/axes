@@ -22,9 +22,15 @@ export default function App() {
   const [pendingRisk, setPendingRisk] = useState<string | null>(null);
 
   useEffect(() => {
-    window.axes.getConfig().then((config) => {
-      if (config.mode === 'computer') setMode('computer');
-    }).catch(() => undefined);
+    const axesApi = (window as any).axes;
+
+    if (axesApi?.getConfig) {
+      axesApi.getConfig()
+        .then((config: any) => {
+          if (config?.mode === 'computer') setMode('computer');
+        })
+        .catch(() => undefined);
+    }
   }, []);
 
   const orbStyle = useMemo(() => ({
