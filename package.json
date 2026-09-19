@@ -1,0 +1,40 @@
+{
+  "name": "axes",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "main": "electron/main/index.ts",
+  "scripts": {
+    "dev": "concurrently -k \"npm:dev:server\" \"npm:dev:renderer\" \"wait-on tcp:3001 tcp:5173 && npm run electron\"",
+    "dev:server": "tsx watch server/index.ts",
+    "dev:renderer": "vite --host 0.0.0.0",
+    "electron": "tsx electron/main/index.ts",
+    "build": "vite build",
+    "preview": "vite preview --host 0.0.0.0",
+    "start": "NODE_ENV=production tsx electron/main/index.ts"
+  },
+  "dependencies": {
+    "better-sqlite3": "^11.1.0",
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.5",
+    "express": "^4.19.2",
+    "openai": "^4.55.2",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1"
+  },
+  "devDependencies": {
+    "@types/better-sqlite3": "^7.4.1",
+    "@types/cors": "^2.8.5",
+    "@types/express": "^5.0.0",
+    "@types/node": "^22.9.0",
+    "@types/react": "^18.3.12",
+    "@types/react-dom": "^18.3.1",
+    "@vitejs/plugin-react": "^4.3.3",
+    "concurrently": "^9.0.1",
+    "electron": "^33.0.0",
+    "tsx": "^4.19.1",
+    "typescript": "^5.6.3",
+    "vite": "^5.4.10",
+    "wait-on": "^8.1.0"
+  }
+}
