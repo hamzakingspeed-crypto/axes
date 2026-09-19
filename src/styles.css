@@ -1,184 +1,329 @@
-import { useEffect, useMemo, useState } from 'react';
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
 
-const initialArtifacts = [
-  { id: 1, type: 'menu', title: 'Primary menu', content: 'Overview / Notes / Search / Automations / Security' },
-  { id: 2, type: 'web', title: 'Web result', content: 'OpenAI Realtime voice + agentic desktop workflows are functional for a focused companion UI.' },
-  { id: 3, type: 'graphics', title: 'Orb status', content: 'Signal clean / voice ready / background tool threads stable / no blockers.' },
-  { id: 4, type: 'notes', title: 'Quick note', content: 'Keep the UX simple: calm operator voice, clear status, fast tasks, minimal friction.' },
-  { id: 5, type: 'table', title: 'Database table', content: 'notes | tasks | progress | session_state' },
-  { id: 6, type: 'code', title: 'Code snippet', content: 'const session = await openai.beta.realtime.sessions.create({ model: "gpt-realtime-2" });' },
-  { id: 7, type: 'task', title: 'Task progress', content: 'Research 100% • Voice session 96% • Computer use 72% • Artifact panel 90%' },
-];
+:root {
+  color-scheme: dark;
+  --bg: #050b14;
+  --panel: rgba(15, 20, 31, 0.82);
+  --panel-strong: rgba(12, 16, 24, 0.95);
+  --line: rgba(152, 172, 196, 0.2);
+  --text: #e6edf9;
+  --muted: #9aa9c5;
+  --accent: #6ab9ff;
+  --accent-strong: #8b7dff;
+  --success: #79e7b8;
+  --warning: #f9d876;
+  --shadow: rgba(0, 0, 0, 0.45);
+}
 
-type Artifact = {
-  id: number;
-  type: string;
-  title: string;
-  content: string;
-};
+* {
+  box-sizing: border-box;
+}
 
-export default function App() {
-  const [mode, setMode] = useState<'display' | 'computer'>('display');
-  const [listening, setListening] = useState(false);
-  const [isSpeaking, setIsSpeaking] = useState(false);
-  const [transcript, setTranscript] = useState('');
-  const [artifacts, setArtifacts] = useState<Artifact[]>(initialArtifacts);
-  const [expanded, setExpanded] = useState(false);
-  const [pendingRisk, setPendingRisk] = useState<string | null>(null);
+html, body, #root {
+  margin: 0;
+  min-height: 100%;
+  height: 100%;
+  background: radial-gradient(circle at top, #0f1b2d 0%, #090d17 40%, #03070d 100%);
+  color: var(--text);
+  font-family: 'Inter', sans-serif;
+}
 
-  useEffect(() => {
-    const fetchConfig = async () => {
-      const config = await window.axes.getConfig();
-      if (config.mode === 'computer') setMode('computer');
-    };
+body {
+  min-height: 100vh;
+}
 
-    fetchConfig().catch(() => undefined);
-  }, []);
+button, textarea {
+  font: inherit;
+}
 
-  const orbStyle = useMemo(
-    () => ({
-      transform: isSpeaking ? 'scale(1.08)' : 'scale(1)',
-      boxShadow: isSpeaking
-        ? '0 0 42px rgba(86, 185, 255, 0.9), 0 0 90px rgba(118, 102, 255, 0.65)'
-        : '0 0 26px rgba(86, 185, 255, 0.4)',
-    }),
-    [isSpeaking]
-  );
+button {
+  border: 1px solid var(--line);
+  background: rgba(255, 255, 255, 0.02);
+  color: var(--text);
+  border-radius: 10px;
+  padding: 0.7rem 1rem;
+  cursor: pointer;
+  transition: 180ms ease;
+}
 
-  const handleRiskAction = (actionLabel: string) => {
-    setPendingRisk(actionLabel);
-  };
+button:hover {
+  border-color: rgba(106, 185, 255, 0.5);
+}
 
-  const confirmRisk = () => {
-    if (!pendingRisk) return;
-    setArtifacts((current) => [
-      {
-        id: Date.now(),
-        type: 'task',
-        title: 'Permission granted',
-        content: `${pendingRisk} was paused for approval and then confirmed.`,
-      },
-      ...current,
-    ]);
-    setPendingRisk(null);
-  };
+button.primary {
+  background: linear-gradient(135deg, var(--accent), var(--accent-strong));
+  color: #06111e;
+  border: none;
+  font-weight: 700;
+}
 
-  const handleAddNote = () => {
-    setArtifacts((current) => [
-      {
-        id: Date.now(),
-        type: 'notes',
-        title: 'New note',
-        content: 'Axes logged a follow-up for the next work cycle.',
-      },
-      ...current,
-    ]);
-  };
+textarea {
+  width: 100%;
+  resize: vertical;
+  border-radius: 12px;
+  border: 1px solid var(--line);
+  background: rgba(3, 9, 18, 0.6);
+  color: var(--text);
+  padding: 0.9rem 1rem;
+}
 
-  const handleTaskUpdate = () => {
-    setArtifacts((current) =>
-      current.map((artifact) =>
-        artifact.type === 'task'
-          ? {
-              ...artifact,
-              content: 'Research 100% • Voice session 98% • Computer use 78% • Artifact panel 92%',
-            }
-          : artifact
-      )
-    );
-  };
+.app-shell {
+  display: grid;
+  grid-template-columns: 420px minmax(0, 1fr);
+  min-height: 100vh;
+  padding: 24px;
+  gap: 24px;
+}
 
-  return (
-    <div className={`app-shell ${expanded ? 'expanded' : ''}`}>
-      <aside className="companion-panel">
-        <div className="topbar">
-          <div>
-            <div className="eyebrow">AI COMPANION</div>
-            <h1>Axes</h1>
-          </div>
-          <div className="mode-toggle">
-            <button
-              className={mode === 'display' ? 'active' : ''}
-              onClick={() => setMode('display')}
-            >
-              Display
-            </button>
-            <button
-              className={mode === 'computer' ? 'active' : ''}
-              onClick={() => setMode('computer')}
-            >
-              Computer use
-            </button>
-          </div>
-        </div>
+.app-shell.expanded {
+  grid-template-columns: 1fr;
+}
 
-        <div className="orb-wrap">
-          <div className="orb-ring" />
-          <div className="orb-core" style={orbStyle}>
-            <div className="orb-glow" />
-          </div>
-        </div>
+.companion-panel,
+.artifact-panel {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 24px;
+  box-shadow: 0 20px 60px var(--shadow);
+  backdrop-filter: blur(18px);
+}
 
-        <div className="voice-controls">
-          <button className="primary" onClick={() => setListening((value) => !value)}>
-            {listening ? 'Mute mic' : 'Listen'}
-          </button>
-          <button onClick={() => setIsSpeaking((value) => !value)}>Toggle voice</button>
-          <button onClick={() => handleRiskAction('Send a message to someone')}>Risk action</button>
-        </div>
+.companion-panel {
+  display: flex;
+  flex-direction: column;
+  padding: 28px 22px;
+  gap: 20px;
+}
 
-        <div className="status-box">
-          <span>Mode</span>
-          <strong>{mode === 'display' ? 'Display mode' : 'Computer use'}</strong>
-          <small>{listening ? 'Listening for input' : 'Standby'}</small>
-        </div>
+.topbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: start;
+  gap: 14px;
+}
 
-        <textarea
-          value={transcript || 'Ask Axes for a summary, a search, or a workflow update.'}
-          onChange={(event) => setTranscript(event.target.value)}
-          rows={6}
-        />
+.eyebrow {
+  font-size: 11px;
+  letter-spacing: 0.12em;
+  color: var(--muted);
+  margin-bottom: 6px;
+}
 
-        <div className="quick-actions">
-          <button onClick={handleAddNote}>New note</button>
-          <button onClick={handleTaskUpdate}>Update task</button>
-          <button onClick={() => setExpanded((value) => !value)}>
-            {expanded ? 'Collapse panel' : 'Expand panel'}
-          </button>
-        </div>
-      </aside>
+h1, h2, h3, p {
+  margin: 0;
+}
 
-      <main className="artifact-panel">
-        <div className="panel-header">
-          <h2>Artifacts</h2>
-          <span>{artifacts.length} active</span>
-        </div>
+h1 {
+  font-size: 2rem;
+}
 
-        <div className="artifact-grid">
-          {artifacts.map((artifact) => (
-            <article key={artifact.id} className={`artifact ${artifact.type}`}>
-              <div className="artifact-tag">{artifact.type}</div>
-              <h3>{artifact.title}</h3>
-              <p>{artifact.content}</p>
-            </article>
-          ))}
-        </div>
-      </main>
+.mode-toggle {
+  display: inline-flex;
+  gap: 8px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  padding: 6px;
+}
 
-      {pendingRisk && (
-        <div className="risk-modal">
-          <div className="risk-card">
-            <h3>Confirmation needed</h3>
-            <p>
-              This action is risky: {pendingRisk}. Axes should pause and ask before proceeding.
-            </p>
-            <div className="risk-actions">
-              <button className="primary" onClick={confirmRisk}>Confirm</button>
-              <button onClick={() => setPendingRisk(null)}>Cancel</button>
-            </div>
-          </div>
-        </div>
-      )}
-    </div>
-  );
+.mode-toggle button {
+  border: 0;
+  background: transparent;
+  border-radius: 999px;
+  padding: 0.45rem 0.75rem;
+  color: var(--muted);
+}
+
+.mode-toggle button.active {
+  background: rgba(106, 185, 255, 0.15);
+  color: var(--text);
+  border: 1px solid rgba(106, 185, 255, 0.35);
+}
+
+.orb-wrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 260px;
+}
+
+.orb-ring {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(106, 185, 255, 0.2), rgba(106, 185, 255, 0.04) 42%, rgba(255,255,255,0) 70%);
+  filter: blur(6px);
+  animation: pulse 3s ease-in-out infinite;
+}
+
+.orb-core {
+  position: relative;
+  width: 170px;
+  height: 170px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 30% 30%, #d5ecff, #89d3ff 22%, #6e79ff 52%, #111b36 100%);
+  border: 1px solid rgba(190, 214, 255, 0.55);
+  transition: transform 250ms ease, box-shadow 250ms ease;
+  animation: drift 5s ease-in-out infinite alternate;
+}
+
+.orb-glow {
+  position: absolute;
+  inset: 14px;
+  border-radius: 50%;
+  background: radial-gradient(circle at center, rgba(255,255,255,0.95), rgba(255,255,255,0.1) 30%, transparent 55%);
+}
+
+.voice-controls,
+.quick-actions {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.status-box {
+  display: flex;
+  flex-direction: column;
+  padding: 1rem 1rem 0.85rem;
+  border-radius: 14px;
+  border: 1px solid var(--line);
+  background: rgba(255, 255, 255, 0.02);
+  gap: 0.2rem;
+}
+
+.status-box span {
+  color: var(--muted);
+  font-size: 11px;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+}
+
+.status-box strong {
+  font-size: 1.05rem;
+}
+
+.status-box small {
+  color: var(--muted);
+}
+
+.artifact-panel {
+  padding: 24px;
+  overflow: hidden;
+}
+
+.panel-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 20px;
+}
+
+.panel-header span {
+  color: var(--muted);
+}
+
+.artifact-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 18px;
+}
+
+.artifact {
+  border-radius: 18px;
+  border: 1px solid var(--line);
+  background: rgba(7, 12, 19, 0.8);
+  padding: 18px;
+  min-height: 180px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.artifact-tag {
+  display: inline-flex;
+  width: fit-content;
+  padding: 0.35rem 0.6rem;
+  border-radius: 999px;
+  background: rgba(106, 185, 255, 0.12);
+  color: var(--accent);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-size: 10px;
+  font-weight: 700;
+}
+
+.artifact h3 {
+  font-size: 1.15rem;
+}
+
+.artifact p {
+  color: var(--muted);
+  line-height: 1.6;
+}
+
+.artifact.notes {
+  border-color: rgba(121, 231, 184, 0.25);
+}
+
+.artifact.web {
+  border-color: rgba(249, 216, 118, 0.25);
+}
+
+.artifact.code {
+  border-color: rgba(139, 125, 255, 0.25);
+}
+
+.artifact.table {
+  border-color: rgba(106, 185, 255, 0.25);
+}
+
+.risk-modal {
+  position: fixed;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  background: rgba(1, 5, 12, 0.72);
+  backdrop-filter: blur(8px);
+  z-index: 10;
+}
+
+.risk-card {
+  width: min(440px, calc(100vw - 40px));
+  padding: 24px;
+  border: 1px solid rgba(249, 216, 118, 0.4);
+  border-radius: 18px;
+  background: #0d1524;
+  box-shadow: 0 24px 80px rgba(0, 0, 0, 0.6);
+}
+
+.risk-card h3 {
+  margin-bottom: 10px;
+}
+
+.risk-card p {
+  color: var(--muted);
+  line-height: 1.6;
+}
+
+.risk-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 20px;
+}
+
+@keyframes drift {
+  0% { transform: translateY(0px) scale(1); }
+  100% { transform: translateY(-10px) scale(1.03); }
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 0.7; transform: scale(0.98); }
+  50% { opacity: 1; transform: scale(1.04); }
+}
+
+@media (max-width: 980px) {
+  .app-shell {
+    grid-template-columns: 1fr;
+  }
 }
